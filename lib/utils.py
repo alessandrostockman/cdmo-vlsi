@@ -24,4 +24,3 @@ def plot_result(plate, circuits):
     ax.set_xticks(np.arange(plate[1]))
     ax.set_yticks(np.arange(plate[0]))
     plt.show()
-    print(plate, circuits)

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser.add_argument('-P', '--plot', dest="plot", help="", default=False, action='store_true')
     args = parser.parse_args()
 
-    plate, circuits = load_solution("res/solutions/out-1.txt")
+    plate, circuits = load_solution("res/solutions/out-0.txt")
     plot_result(plate, circuits)
     
     execution_time = 0
