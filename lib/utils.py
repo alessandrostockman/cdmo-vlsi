@@ -1,6 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+def load_instance(filename):
+    with open(filename, 'r') as sol:
+        width = int(sol.readline().strip())
+        circuit_num = int(sol.readline().strip())
+        circuits = []
+        for i in range(circuit_num):
+            circuits.append(tuple(int(el) for el in sol.readline().strip().split(" "))[::-1])
+        return width, circuits
+
 def load_solution(filename):
     with open(filename, 'r') as sol:
         plate = tuple(int(el) for el in sol.readline().strip().split(" "))[::-1]
