@@ -1,17 +1,27 @@
 from argparse import ArgumentParser
-from lib.utils import load_instance, load_solution, plot_result
+from lib.solver import solve_cp
+from lib.utils import load_instance, load_solution, plot_result, write_solution
+import time
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-S", "--solver", default=None, help="", choices=[None])
+    parser.add_argument("-S", "--solver", default=None, help="", choices=[None, "cp"])
     parser.add_argument('-P', '--plot', dest="plot", help="", default=False, action='store_true')
     args = parser.parse_args()
 
-    width, circuits = load_instance("res/instances/ins-0.txt")
-    plate, circuits_pos = load_solution("res/solutions/out-0.txt")
+    inputs = ["res/instances/ins-{0}.txt".format(i) for i in [0, 1, 2, 8]]
+    outputs = ["res/solutions/out-{0}.txt".format(i) for i in [0, 1, 2, 8]]
 
-    print("Fill a plate with width: {0}. \nCircuits: {1}".format(width, circuits))
-    plot_result(plate, circuits_pos)
+    instances = [load_instance(i) for i in inputs]
     
-    execution_time = 0
+    start_time = time.time()
+    solutions = solve_cp("solver/naive.mzn", instances)
+    execution_time = time.time() - start_time
+    
+    for sol, out in zip(solutions, outputs):
+        write_solution(out, sol)
+        plate, circuits_pos = sol
+
+        if args.plot:
+            plot_result(plate, circuits_pos)
     print("Execution finished in " + str(execution_time) + "s")
