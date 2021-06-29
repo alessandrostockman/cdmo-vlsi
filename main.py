@@ -6,22 +6,31 @@ import time
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-S", "--solver", default=None, help="", choices=[None, "cp"])
-    parser.add_argument('-P', '--plot', dest="plot", help="", default=False, action='store_true')
+    parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
     args = parser.parse_args()
 
-    inputs = ["res/instances/ins-{0}.txt".format(i) for i in [0, 1, 2, 8]]
-    outputs = ["res/solutions/out-{0}.txt".format(i) for i in [0, 1, 2, 8]]
+    problems = [0, 1, 2, 8]
+    inputs = ["res/instances/ins-{0}.txt".format(i) for i in problems]
+    outputs = ["res/solutions/out-{0}.txt".format(i) for i in problems]
 
-    instances = [load_instance(i) for i in inputs]
+    solutions = []
+    for input, output in zip(inputs, outputs):
+        instance = load_instance(input)
+        if args.solver is None:
+            solutions = load_solution(output)
+        else:
+            start_time = time.time()
+            if args.solver == "cp": 
+                sol = solve_cp("solver/naive.mzn", instance)
+            if args.solver == "sat": 
+                pass
+            execution_time = time.time() - start_time
+            print("Problem {0} solved in {1}ms".format(input, round(execution_time * 1000, 4)))
+            
+            write_solution(output, sol)
+            solutions.append(sol)
     
-    start_time = time.time()
-    solutions = solve_cp("solver/naive.mzn", instances)
-    execution_time = time.time() - start_time
-    
-    for sol, out in zip(solutions, outputs):
-        write_solution(out, sol)
-        plate, circuits_pos = sol
-
-        if args.plot:
+    if args.plot:
+        for sol, out in zip(solutions, outputs):
+            plate, circuits_pos = sol
             plot_result(plate, circuits_pos)
-    print("Execution finished in " + str(execution_time) + "s")
