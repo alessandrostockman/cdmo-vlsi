@@ -6,7 +6,7 @@ import time
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-S", "--solver", default=None, help="", choices=[None, "cp"])
+    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp"])
     parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
     parser.add_argument('-I', '--instances', help="", default="res/instances")
     parser.add_argument('-O', '--output', help="", default="res/solutions")
@@ -16,8 +16,8 @@ if __name__ == "__main__":
         inputs = sorted([os.path.join(args.instances, i) for i in os.listdir(args.instances) if os.path.isfile(os.path.join(args.instances, i))])
     elif os.path.isfile(args.instances):
         inputs = [args.instances]
-    else:
-        pass
+    elif args.instances == "all":
+        inputs = ["res/instances/ins-{0}.txt".format(i) for i in range(41)]
 
     solutions = []
     for input in inputs:
@@ -27,8 +27,10 @@ if __name__ == "__main__":
             output = output.replace('ins', 'out')
 
         instance = load_instance(input)
-        if args.solver is None:
-            solutions = load_solution(output)
+        if args.solver == "null":
+            if not os.path.isfile(output):
+                continue
+            sol = load_solution(output)
         else:
             start_time = time.time()
             if args.solver == "cp": 
@@ -39,9 +41,10 @@ if __name__ == "__main__":
             print("Problem {0} solved in {1}ms".format(input, round(execution_time * 1000, 4)))
             
             write_solution(output, sol)
-            solutions.append(sol)
+        
+        solutions.append(sol)
     
     if args.plot:
-        for sol, out in zip(solutions, outputs):
+        for sol in solutions:
             plate, circuits_pos = sol
             plot_result(plate, circuits_pos)
