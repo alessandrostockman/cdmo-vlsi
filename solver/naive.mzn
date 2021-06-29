@@ -1,7 +1,6 @@
 
 int: n;
 int: max_w;
-int: upper_bound = 50;
 array[1..n] of int: w;
 array[1..n] of int: h;
 % 12
@@ -10,6 +9,7 @@ array[1..n] of int: h;
 
 array[1..n] of var int: x;
 array[1..n] of var int: y;
+var int: upper_bound = sum(h);
 
 constraint forall(i in 1..n) (x[i] >= 0 /\ x[i] + w[i] <= max_w);
 constraint forall(i in 1..n) (y[i] >= 0);
