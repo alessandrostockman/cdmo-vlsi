@@ -6,13 +6,13 @@ def solve_cp(code_file, data):
 
     plate_width, circuits = data
     instance = Instance(gecode, model)
-    instance["n"] = len(circuits)
-    instance["max_w"] = plate_width
+    instance["num_circuits"] = len(circuits)
+    instance["plate_width"] = plate_width
 
     w, h = ([ i for i, j in circuits ],
         [ j for i, j in circuits ])
-    instance["w"] = w
-    instance["h"] = h
+    instance["widths"] = w
+    instance["heights"] = h
 
     result = instance.solve()
 
