@@ -12,11 +12,12 @@ int: upper_bound = sum(heights);
 array[1..num_circuits] of var 0..plate_width-1: x;
 array[1..num_circuits] of var 0..upper_bound-1: y;
 
-constraint forall(i in 1..num_circuits) (x[i] >= 0 /\ x[i] + widths[i] <= plate_width);
-constraint forall(i in 1..num_circuits) (y[i] >= 0);
+constraint forall(i in 1..num_circuits) (x[i] + widths[i] <= plate_width);
+constraint forall(i in 1..num_circuits) (y[i] + heights[i] <= upper_bound);
 
 constraint forall(i in 0..(upper_bound-1)) (sum([ if ((i <= y[j] + heights[j] - 1) /\ (i >= y[j])) then widths[j] else 0 endif | j in 1..num_circuits]) <= plate_width);
 constraint forall(i in 0..(plate_width-1)) (sum([ if ((i <= x[j] + widths[j] - 1) /\ (i >= x[j])) then heights[j] else 0 endif | j in 1..num_circuits]) <= max_y);
+
 
 constraint diffn(y,x,heights,widths);
 constraint cumulative(x, widths, heights, upper_bound);
@@ -29,7 +30,7 @@ constraint forall(i in 1..num_circuits, j in 1..num_circuits)
           (y[i] <= y[j] + heights[j] - 1 /\ y[i] >= y[j]) 
            \/ (y[i] + heights[i] - 1 <= y[j] + heights[j] - 1 /\ y[i] + heights[i] - 1 >= y[j])
         ) /\ i != j
-        -> x[i] + widths[i] - 1 < x[j] \/ x[i]> x[j] + widths[j] - 1
+        -> x[i] + widths[i] - 1 < x[j] \/ x[i] > x[j] + widths[j] - 1
     );
 */
 
