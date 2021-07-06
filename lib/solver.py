@@ -20,3 +20,7 @@ def solve_cp(code_file, data):
     plate_height = result.objective
 
     return (plate_width, plate_height), circuits_pos
+
+def solve_sat():
+    (plate_width, plate_height), circuits_pos = (10, 10), [(0, 0, 5, 5)]
+    return (plate_width, plate_height), circuits_pos
