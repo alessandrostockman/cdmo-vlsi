@@ -2,10 +2,10 @@ include "globals.mzn";
 include "cumulative.mzn";
 include "alldifferent.mzn";
 
-int: num_circuits = 12;
-int: plate_width = 17;
-array[1..num_circuits] of int: widths = [3,3,3,3,3,3,3,4,4,4,7,7];
-array[1..num_circuits] of int: heights = [3,4,5,6,7,8,9,3,8,14,3,6];
+int: num_circuits;
+int: plate_width;
+array[1..num_circuits] of int: widths;
+array[1..num_circuits] of int: heights;
 
 int: upper_bound = sum(heights);
 
