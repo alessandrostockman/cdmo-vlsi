@@ -27,7 +27,8 @@ def plot_result(plate, circuits):
         for i in range(w):
             for j in range(h):
                 matrix[y+j, x+i] = idx+1
-                # ax.text(y+j+0.5, x+i+0.5, str(idx+1), va='center', ha='center')
+                
+                ax.text(x+i+0.5, y+j+0.5, str(idx+1), va='center', ha='center')
 
     plt.pcolormesh(matrix, edgecolors='black')
     ax.set_xticks(np.arange(plate[0]))
