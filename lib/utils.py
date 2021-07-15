@@ -20,15 +20,17 @@ def load_solution(filename):
         return plate, circuits
 
 def plot_result(plate, circuits):
+    plate_w, plate_h = plate
     matrix = np.zeros(plate[::-1], dtype=int)
 
     fig, ax = plt.subplots()
     for idx, (w, h, x, y) in enumerate(circuits):
+        matrix[y:y+h, x:x+w] = idx+1
+
         for i in range(w):
             for j in range(h):
-                matrix[y+j, x+i] = idx+1
-                
-                ax.text(x+i+0.5, y+j+0.5, str(idx+1), va='center', ha='center')
+                if x+i <= plate_w and y+j <= plate_h:
+                    ax.text(x+i+0.5, y+j+0.5, str(idx+1), va='center', ha='center')
 
     plt.pcolormesh(matrix, edgecolors='black')
     ax.set_xticks(np.arange(plate[0]))
