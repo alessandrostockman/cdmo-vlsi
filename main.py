@@ -42,9 +42,9 @@ if __name__ == "__main__":
             
             write_solution(output, sol)
         
-        solutions.append(sol)
+        solutions.append((sol, input))
     
     if args.plot:
-        for sol in solutions:
+        for sol, title in solutions:
             plate, circuits_pos = sol
-            plot_result(plate, circuits_pos)
+            plot_result(plate, circuits_pos, title)

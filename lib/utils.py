@@ -19,11 +19,12 @@ def load_solution(filename):
             circuits.append(tuple(int(el) for el in sol.readline().strip().split(" ")))
         return plate, circuits
 
-def plot_result(plate, circuits):
+def plot_result(plate, circuits, plot_title):
     plate_w, plate_h = plate
     matrix = np.zeros(plate[::-1], dtype=int)
 
     fig, ax = plt.subplots()
+    fig.canvas.manager.set_window_title(plot_title)
     for idx, (w, h, x, y) in enumerate(circuits):
         matrix[y:y+h, x:x+w] = idx+1
 
@@ -32,7 +33,7 @@ def plot_result(plate, circuits):
                 if x+i <= plate_w and y+j <= plate_h:
                     ax.text(x+i+0.5, y+j+0.5, str(idx+1), va='center', ha='center')
 
-    plt.pcolormesh(matrix, edgecolors='black')
+    plt.pcolormesh(matrix, edgecolors='black', cmap="prism")
     ax.set_xticks(np.arange(plate[0]))
     ax.set_yticks(np.arange(plate[1]))
     plt.show()
