@@ -9,8 +9,7 @@ def solve_cp(code_file, data):
     instance["num_circuits"] = len(circuits)
     instance["plate_width"] = plate_width
 
-    w, h = ([ i for i, j in circuits ],
-        [ j for i, j in circuits ])
+    w, h = ([ i for i, j in circuits ], [ j for i, j in circuits ])
     instance["widths"] = w
     instance["heights"] = h
 
