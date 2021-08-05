@@ -11,8 +11,8 @@ set of int: rectangle = index_set(1..num_circuits);
 
 array[int] of int : order = sort_by(rectangle, [-widths[r]*heights[r] | r in rectangle]);
 
-array[rectangle] of var 0..plate_width: x;
-array[rectangle] of var 0..sum(heights): y;
+array[rectangle] of var 0..plate_width: x;   %-1 ??
+array[rectangle] of var 0..sum(heights): y;  %-1 ??
 
 var max(heights)..sum(heights): plate_height;
 
