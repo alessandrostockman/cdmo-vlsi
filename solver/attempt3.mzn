@@ -43,6 +43,14 @@ constraint
 %  forall(i in index_set(I) where i>1)(lex_less( [y[I[i−1]],x[I[i−1]]], [y[I[i]],x[I[i]]]))
 %     else true endif );
 
+constraint  forall(r in circuits)(
+   let {array[int] of int: I = [i | i in circuits where widths[i]=widths[r] /\ heights[i]=heights[r]]}
+   in (
+     if (length(I)>1 /\ min(I)=r) then
+       forall (i in index_set(I) where i>1) (lex_less([y[I[i-1]],x[I[i-1]]],[y[I[i]],x[I[i]]]))
+     else true 
+     endif ));
+
 % solve :: 
 %   int_search([plate_height], first_fail, indomain_min, complete)
 %   :: seq_search([

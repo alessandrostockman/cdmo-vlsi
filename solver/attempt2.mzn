@@ -8,14 +8,14 @@ array[int] of int: heights; % heights of rectangles
 set of int: rectangle = index_set(heights);
 
 % by decreasing area
-array[int] of int: order = sort_by(rectangle, [−1*widths[r]∗heights[r] | r in rectangle]);
+array[int] of int: order = sort_by(rectangle, [−widths[r]∗heights[r] | r in rectangle]);
 
 array[rectangle] of var 0..plate_width: x;
 array[rectangle] of var 0..sum(heights): y;
 
 var max(heights)..sum(heights): plate_height;
 
-constraint forall(r in rectangle)( x[r] + widths[r] <= plate_width /\ y[r] + heights[r] <= plate_height);
+constraint forall(r in rectangle)(x[r] + widths[r] <= plate_width /\ y[r] + heights[r] <= plate_height);
 constraint diffn(x, y, widths, heights);
 
 % redundant −− too difficult without these constraints?
