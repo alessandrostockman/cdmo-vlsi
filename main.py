@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 import os
-from lib.solver import solve_cp
+from lib.solver import solve_cp, solve_sat
 from lib.utils import load_instance, load_solution, plot_result, write_solution
 import time
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp"])
+    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat"])
     parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
     parser.add_argument('-I', '--instances', help="", default="res/instances")
     parser.add_argument('-O', '--output', help="", default="res/solutions")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
             if args.solver == "cp": 
                 sol = solve_cp("solver/naive.mzn", instance)
             if args.solver == "sat": 
-                pass
+                sol = solve_sat(instance)
             execution_time = time.time() - start_time
             print("Problem {0} solved in {1}ms".format(input, round(execution_time * 1000, 4)))
             
