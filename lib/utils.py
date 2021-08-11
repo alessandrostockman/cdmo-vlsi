@@ -1,4 +1,6 @@
+from matplotlib import patches
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import numpy as np
 
 def load_instance(filename):
@@ -19,7 +21,25 @@ def load_solution(filename):
             circuits.append(tuple(int(el) for el in sol.readline().strip().split(" ")))
         return plate, circuits
 
+
 def plot_result(plate, circuits, plot_title):
+    fig, ax = plt.subplots()
+    fig.canvas.manager.set_window_title(plot_title)
+    
+    for idx, (w, h, x, y) in enumerate(circuits):
+        rect = patches.Rectangle((x, y), w, h, linewidth=2, edgecolor='black', facecolor=colors.hsv_to_rgb((idx / len(circuits), 1, 1)))
+        ax.add_patch(rect)
+
+        for i in range(1, w):
+            ax.plot((x+i, x+i), (y, y+h), color="black", linewidth=1)
+        for j in range(1, h):
+            ax.plot((x, x+w), (y+j, y+j), color="black", linewidth=1)
+
+    ax.set_xticks(np.arange(plate[0]))
+    ax.set_yticks(np.arange(plate[1]))
+    plt.show()
+
+def plot_result_alternative(plate, circuits, plot_title):
     plate_w, plate_h = plate
     matrix = np.zeros(plate[::-1], dtype=int)
 
