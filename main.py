@@ -34,12 +34,12 @@ if __name__ == "__main__":
                 continue
             sol = load_solution(output)
         else:
-            timeout = 4
+            timeout = 5 * 60
             if args.solver == "cp": 
                 sol, execution_time = solve_cp("cp/src/solver.mzn", instance, timeout)
             if args.solver == "sat": 
                 sol, execution_time = solve_sat(instance, timeout)
-            print("Problem {0} solved in {1}ms".format(input, round(execution_time, 4)))
+            print("Problem {0} solved in {1}s".format(input, round(execution_time, 4)))
             
             write_solution(output, sol)
         

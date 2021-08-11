@@ -23,7 +23,7 @@ def solve_cp(code_file, data, timeout):
         circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
         plate_height = result.objective
 
-        return ((plate_width, plate_height), circuits_pos), result.statistics['time'].total_seconds() / 1000
+        return ((plate_width, plate_height), circuits_pos), result.statistics['time'].total_seconds()
     else:
         return None, 0
 

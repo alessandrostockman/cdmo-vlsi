@@ -63,6 +63,6 @@ def solve_sat(data, timeuout=60*5):
         circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
         plate_height = m.eval(max_y).as_long()
 
-        return ((plate_width, plate_height), circuits_pos), (time.time() - start_time) * 1000
+        return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
     else:
         return None, 0
