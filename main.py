@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
 import os
 import time
+import matplotlib.pyplot as plt
+import numpy as np
 
 from cp.src.solver import solve_cp
 from sat.src.solver import solve_sat
@@ -65,8 +67,22 @@ if __name__ == "__main__":
                 else:
                     stats_times.append(execution_time)
                 write_solution(output, sol)
+            else:
+                stats_times.append(None)
         
         solutions.append((sol, input))
+
+    if args.stats:
+        stats_times = np.array(stats_times)
+        stats_times[stats_times == None] = 0
+        fig, ax = plt.subplots()
+        r = np.arange(1, len(stats_times)+1)
+        ax.bar(r, stats_times)
+        ax.set_xticks(r)
+
+        ax.set(xlabel='Instance', ylabel='Time (ms)', title='')
+        ax.grid()
+        plt.show()
 
     if args.plot:
         for sol, title in solutions:
