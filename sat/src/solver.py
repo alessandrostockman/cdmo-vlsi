@@ -1,34 +1,12 @@
-from minizinc import Instance, Model, Solver, Status
+import time
 import z3
 from copy import copy
 
-def solve_cp(code_file, data):
-    model = Model(code_file)
-    gecode = Solver.lookup("gecode")
-
-    plate_width, circuits = data
-    instance = Instance(gecode, model)
-    instance["num_circuits"] = len(circuits)
-    instance["plate_width"] = plate_width
-
-    w, h = ([ i for i, j in circuits ], [ j for i, j in circuits ])
-    instance["widths"] = w
-    instance["heights"] = h
-
-    result = instance.solve()
-
-    if result.status is Status.OPTIMAL_SOLUTION:
-        circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
-        plate_height = result.objective
-
-    return (plate_width, plate_height), circuits_pos
-
-def solve_sat(data):
+def solve_sat(data, timeuout=60*5):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
-    w, h = ([ i for i, j in circuits ],
-        [ j for i, j in circuits ])
+    w, h = ([ i for i, j in circuits ], [ j for i, j in circuits ])
 
     x = [ z3.Int('X_%i' % (i + 1)) for i in range(circuits_num) ]
     y = [ z3.Int('Y_%i' % (i + 1)) for i in range(circuits_num) ]
@@ -68,6 +46,8 @@ def solve_sat(data):
                 )
 
     opt = z3.Optimize()
+    opt.set(timeout=timeuout*1000)
+
     opt.add(
         constraint1 + 
         constraint2 + 
@@ -77,11 +57,12 @@ def solve_sat(data):
 
     opt.minimize(max_y)
 
+    start_time = time.time()
     if opt.check() == z3.sat:
         m = opt.model()
         circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
         plate_height = m.eval(max_y).as_long()
 
-        return (plate_width, plate_height), circuits_pos
+        return ((plate_width, plate_height), circuits_pos), (time.time() - start_time) * 1000
     else:
-        return None
+        return None, 0

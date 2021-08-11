@@ -1,8 +1,10 @@
 from argparse import ArgumentParser
 import os
-from lib.solver import solve_cp, solve_sat
-from lib.utils import load_instance, load_solution, plot_result, write_solution
 import time
+
+from cp.src.solver import solve_cp
+from sat.src.solver import solve_sat
+from lib.utils import load_instance, load_solution, plot_result, write_solution
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -32,13 +34,12 @@ if __name__ == "__main__":
                 continue
             sol = load_solution(output)
         else:
-            start_time = time.time()
+            timeout = 4
             if args.solver == "cp": 
-                sol = solve_cp("solver/best.mzn", instance)
+                sol, execution_time = solve_cp("cp/src/solver.mzn", instance, timeout)
             if args.solver == "sat": 
-                sol = solve_sat(instance)
-            execution_time = time.time() - start_time
-            print("Problem {0} solved in {1}ms".format(input, round(execution_time * 1000, 4)))
+                sol, execution_time = solve_sat(instance, timeout)
+            print("Problem {0} solved in {1}ms".format(input, round(execution_time, 4)))
             
             write_solution(output, sol)
         
