@@ -1,4 +1,4 @@
-from minizinc import Instance, Model, Solver
+from minizinc import Instance, Model, Solver, Status
 import z3
 from copy import copy
 
@@ -8,18 +8,18 @@ def solve_cp(code_file, data):
 
     plate_width, circuits = data
     instance = Instance(gecode, model)
-    instance["n"] = len(circuits)
-    instance["max_w"] = plate_width
+    instance["num_circuits"] = len(circuits)
+    instance["plate_width"] = plate_width
 
-    w, h = ([ i for i, j in circuits ],
-        [ j for i, j in circuits ])
-    instance["w"] = w
-    instance["h"] = h
+    w, h = ([ i for i, j in circuits ], [ j for i, j in circuits ])
+    instance["widths"] = w
+    instance["heights"] = h
 
     result = instance.solve()
 
-    circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
-    plate_height = result.objective
+    if result.status is Status.OPTIMAL_SOLUTION:
+        circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
+        plate_height = result.objective
 
     return (plate_width, plate_height), circuits_pos
 

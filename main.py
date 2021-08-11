@@ -34,7 +34,7 @@ if __name__ == "__main__":
         else:
             start_time = time.time()
             if args.solver == "cp": 
-                sol = solve_cp("solver/naive.mzn", instance)
+                sol = solve_cp("solver/best.mzn", instance)
             if args.solver == "sat": 
                 sol = solve_sat(instance)
             execution_time = time.time() - start_time

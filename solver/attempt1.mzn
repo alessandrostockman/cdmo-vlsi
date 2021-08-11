@@ -9,23 +9,23 @@ int: plate_width; % Plate width
 array[1..num_circuits] of int: widths; % Array of widths of the circuits
 array[1..num_circuits] of int: heights; % Array of heights of the circuits
 
+% ==== Support variables ==== 
+
+int: lower_bound = max(heights); % Plate height lower bound: max circuit height
+int: upper_bound = sum(heights); % Plate height upper bound: circuits height sum
+
 % ==== Output variables ==== 
 
 array[1..num_circuits] of var 0..plate_width-1: x;
 array[1..num_circuits] of var 0..upper_bound-1: y;
 
-var int: plate_height = max([ heights[i]+y[i] | i in 1..num_circuits ]);
-
-% ==== Support variables ==== 
-
-int: upper_bound = sum(heights); % Plate height upper bound: circuits height sum
-int: lower_bound = max(heights); % Plate height lower bound: max circuit height
+var lower_bound..upper_bound: plate_height = max([ heights[i]+y[i] | i in 1..num_circuits ]); 
 
 % ==== Bounds constraints ==== 
 
-constraint plate_height >= max(heights);
+constraint plate_height >= max(heights);    
 constraint forall(i in 1..num_circuits) (x[i] + widths[i] <= plate_width);
-constraint forall(i in 1..num_circuits) (y[i] + heights[i] <= upper_bound);
+constraint forall(i in 1..num_circuits) (y[i] + heights[i] <= plate_height);
 
 % ==== Overlapping constraints (?) ==== 
 
