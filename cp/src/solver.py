@@ -2,7 +2,6 @@ import datetime
 from minizinc import Instance, Model, Solver, Status
 from copy import copy
 import os
-from lib.utils import load_instance, write_solution
 
 def solve_cp(code_file, data, timeout):
     model = Model(code_file)
@@ -29,7 +28,14 @@ def solve_cp(code_file, data, timeout):
 
 
 if __name__ == "__main__":
+    import sys
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.path.append(base_dir)
+    from lib.utils import load_instance, write_solution
+
+    solver = os.path.join(base_dir, "cp", "src", "solver.mzn")
+    timeout = 5 * 60
+
     instances_dir = os.path.join(base_dir, "res", "instances")
     output_dir = os.path.join(base_dir, "cp", "out")
     inputs = sorted([os.path.join(instances_dir, i) for i in os.listdir(instances_dir) if os.path.isfile(os.path.join(instances_dir, i))])
@@ -41,5 +47,7 @@ if __name__ == "__main__":
             output = output.replace('ins', 'out')
 
         instance = load_instance(input)
-        sol = solve_cp("cp/src/solver.mzn", instance)
+        sol, execution_time = solve_cp(solver, instance, timeout)
         write_solution(output, sol)
+else:
+    from lib.utils import load_instance, write_solution

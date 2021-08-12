@@ -1,3 +1,4 @@
+import os
 import time
 import z3
 from copy import copy
@@ -66,3 +67,27 @@ def solve_sat(data, timeuout=60*5):
         return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
     else:
         return None, 0
+
+if __name__ == "__main__":
+    import sys
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.path.append(base_dir)
+    from lib.utils import load_instance, write_solution
+
+    timeout = 5 * 60
+
+    instances_dir = os.path.join(base_dir, "res", "instances")
+    output_dir = os.path.join(base_dir, "sat", "out")
+    inputs = sorted([os.path.join(instances_dir, i) for i in os.listdir(instances_dir) if os.path.isfile(os.path.join(instances_dir, i))])
+
+    for input in inputs:
+        filename = os.path.basename(input)
+        output = os.path.join(output_dir, filename)
+        if 'ins' in filename:
+            output = output.replace('ins', 'out')
+
+        instance = load_instance(input)
+        sol, execution_time = solve_sat(instance, timeout)
+        write_solution(output, sol)
+else:
+    from lib.utils import load_instance, write_solution
