@@ -3,7 +3,7 @@ import time
 import z3
 from copy import copy
 
-def solve_sat(data, timeuout=60*5):
+def solve_sat(data, timeout=60*5):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
@@ -47,7 +47,7 @@ def solve_sat(data, timeuout=60*5):
                 )
 
     opt = z3.Optimize()
-    opt.set(timeout=timeuout*1000)
+    opt.set(timeout=timeout*1000)
 
     opt.add(
         constraint1 + 
