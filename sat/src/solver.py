@@ -3,7 +3,7 @@ import time
 import z3
 from copy import copy
 
-def solve_sat(data, timeout=60*5):
+def solve_sat(data, timeuout=60*5, rotation=False):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
