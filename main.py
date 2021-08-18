@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('-I', '--instances', help="", default="res/instances")
     parser.add_argument('-O', '--output', help="", default="res/solutions")
     parser.add_argument('-T', '--timeout', help="", default=5*60)
+    parser.add_argument('-R', '--rotation', help="", default=False, action='store_true')
     args = parser.parse_args()
 
     if os.path.isdir(args.instances):
@@ -50,9 +51,9 @@ if __name__ == "__main__":
             while first or args.average and len(times) < 10:
                 first = False
                 if args.solver == "cp": 
-                    sol, execution_time = solve_cp("cp/src/solver.mzn", instance, int(args.timeout))
+                    sol, execution_time = solve_cp(instance, int(args.timeout), rotation=args.rotation)
                 if args.solver == "sat": 
-                    sol, execution_time = solve_sat(instance, int(args.timeout))
+                    sol, execution_time = solve_sat(instance, int(args.timeout), rotation=args.rotation)
 
                 if sol is not None:
                     times.append(execution_time)

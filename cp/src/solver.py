@@ -3,8 +3,9 @@ from minizinc import Instance, Model, Solver, Status
 from copy import copy
 import os
 
-def solve_cp(code_file, data, timeout):
-    model = Model(code_file)
+def solve_cp(data, timeout, rotation=False):
+    solver_file = "cp/src/solver.mzn" if not rotation else "cp/src/solver_rotation.mzn"
+    model = Model(solver_file)
     gecode = Solver.lookup("gecode")
 
     plate_width, circuits = data
