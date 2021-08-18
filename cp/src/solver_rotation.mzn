@@ -50,6 +50,10 @@ constraint symmetry_breaking_constraint(
   } in lex_less([y[o1],x[o1]], [y[o2],x[o2]])
 );
 
+constraint symmetry_breaking_constraint(
+  forall (c in circuits) (heights[c] = widths[c] -> r[c] = 0)
+);
+
 solve :: 
   seq_search([
       int_search([plate_height], first_fail, indomain_min, complete),
