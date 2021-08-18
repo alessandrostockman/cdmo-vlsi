@@ -20,7 +20,10 @@ def solve_cp(data, timeout, rotation=False):
     result = instance.solve(timeout=datetime.timedelta(seconds=timeout))
 
     if result.status is Status.OPTIMAL_SOLUTION:
-        circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
+        if rotation:
+            circuits_pos = [(w, h, x, y) if not r else (h, w, x, y) for (w, h), x, y, r in zip(circuits, result["x"], result["y"], result["r"])]
+        else:
+            circuits_pos = [(w, h, x, y) for (w, h), x, y in zip(circuits, result["x"], result["y"])]
         plate_height = result.objective
 
         return ((plate_width, plate_height), circuits_pos), result.statistics['time'].total_seconds()
