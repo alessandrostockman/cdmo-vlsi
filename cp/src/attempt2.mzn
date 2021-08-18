@@ -8,7 +8,8 @@ array[int] of int: heights; % heights of rectangles
 set of int: rectangle = index_set(heights);
 
 % by decreasing area
-array[int] of int: order = sort_by(rectangle, [−widths[r]∗heights[r] | r in rectangle]);
+%array[int] of int: order = sort_by(rectangle, [−widths[r]∗heights[r] | r in rectangle]);
+array[int] of int : order = sort_by(rectangle, [-widths[r]*heights[r] | r in rectangle]); 
 
 array[rectangle] of var 0..plate_width: x;
 array[rectangle] of var 0..sum(heights): y;
@@ -28,7 +29,16 @@ constraint forall(r in rectangle)(member([0] ++ [x[s] + widths[s] | s in rectang
 constraint let {int: o1 = order[1], int: o2 = order[2]} in lex_less([y[o1],x[o1]], [y[o2],x[o2]]);
 
 % symmetry breaking
-constraint forall(r in rectangle)(let {array[int] of int: I = [i | i in rectangle where widths[i]=widths[r] /\ heights[i]=heights[r]]} in if length(I)>1 /\ min(I)=r then forall (i in index_set(I) where i>1) (lex_less([y[I[i−1]],x[I[i−1]]], [y[I[i]],x[I[i]]])) else true endif);
+%constraint forall(r in rectangle)(let {array[int] of int: I = [i | i in rectangle where widths[i]=widths[r] /\ heights[i]=heights[r]]} in if length(I)>1 /\ min(I)=r then forall (i in index_set(I) where i>1) (lex_less([y[I[i−1]],x[I[i−1]]], [y[I[i]],x[I[i]]])) else true endif);
+constraint  forall(r in rectangle)(
+   let {array[int] of int: I = [i | i in rectangle where widths[i]=widths[r] /\ heights[i]=heights[r]]}
+   in (
+     if (length(I)>1 /\ min(I)=r) then
+       forall (i in index_set(I) where i>1) (lex_less([y[I[i-1]],x[I[i-1]]],[y[I[i]],x[I[i]]]))
+     else true 
+     endif ));
 
 solve :: int_search([plate_height], input_order, indomain_min, complete) :: seq_search([int_search([y[r] | r in order], input_order, indomain_min,
 complete),int_search([x[r] | r in order], input_order, indomain_min, complete), int_search([plate_height], input_order, indomain_min, complete),]) minimize plate_height;
+
+
