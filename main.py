@@ -25,6 +25,8 @@ if __name__ == "__main__":
         inputs = [args.instances]
     elif args.instances == "all":
         inputs = ["res/instances/ins-{0}.txt".format(i) for i in range(41)]
+    else:
+        inputs = [args.instances]
 
     solutions = []
     stats_times = []
@@ -35,12 +37,12 @@ if __name__ == "__main__":
         if 'ins' in filename:
             output = output.replace('ins', 'out')
 
-        instance = load_instance(input)
         if args.solver == "null":
             if not os.path.isfile(output):
                 continue
             sol = load_solution(output)
         else:
+            instance = load_instance(input)
             first = True
             times = []
             sol = None
@@ -76,11 +78,11 @@ if __name__ == "__main__":
         stats_times = np.array(stats_times)
         stats_times[stats_times == None] = 0
         fig, ax = plt.subplots()
-        r = np.arange(1, len(stats_times)+1)
+        r = np.arange(0, len(stats_times))
         ax.bar(r, stats_times)
         ax.set_xticks(r)
 
-        ax.set(xlabel='Instance', ylabel='Time (ms)', title='')
+        ax.set(xlabel='Instance', ylabel='Time (s)', title='')
         ax.grid()
         plt.show()
 
