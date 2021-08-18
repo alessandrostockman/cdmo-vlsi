@@ -15,23 +15,25 @@ array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | 
 array[circuits] of var 0..plate_width-1: x;  
 array[circuits] of var 0..sum(heights)-1: y;  
 
-array[circuits] of var 0..1 : r; 
+array[circuits] of var bool : r; 
 
 var max(heights)..sum(heights): plate_height; 
 
+array[circuits] of var int: real_widths = [(widths[c]*(1-r[c]))+(heights[c]*r[c]) | c in circuits];
+array[circuits] of var int: real_heights = [(heights[c]*(1-r[c]))+(widths[c]*r[c]) | c in circuits];
 
-constraint forall(c in ordered_c)(x[c] + (widths[c]*(1-r[c]))+(heights[c]*r[c]) <= plate_width /\ y[c] + (heights[c]*(1-r[c]))+(widths[c]*r[c]) <= plate_height);
+constraint forall(c in ordered_c)(x[c] + real_widths[c] <= plate_width /\ y[c] + real_heights[c] <= plate_height);
 
-constraint diffn(x,y,[(widths[c]*(1-r[c]))+(heights[c]*r[c]) | c in circuits] ,[(heights[c]*(1-r[c]))+(widths[c]*r[c]) | c in circuits]);
+constraint diffn(x, y, real_widths, real_heights);
 
-constraint cumulative(x, [(widths[c]*(1-r[c]))+(heights[c]*r[c]) | c in circuits], [(heights[c]*(1-r[c]))+(widths[c]*r[c]) | c in circuits], plate_height) /\ cumulative(y, [(heights[c]*(1-r[c]))+(widths[c]*r[c]) | c in circuits], [(widths[c]*(1-r[c]))+(heights[c]*r[c]) | c in circuits], plate_width);
+constraint cumulative(x, real_widths, real_heights, plate_height) /\ cumulative(y, real_heights, real_widths, plate_width);
 
 
 %dominance , non esiste una situazione in cui rettangoli non attaccati è meglio di attaccati (contigui)
 constraint 
   forall(c in ordered_c)(
-    member([0] ++ [x[s] + (widths[s]*(1-r[s]))+(heights[s]*r[s]) | s in circuits where s != c], x[c]) /\
-    member([0] ++ [y[s] + (heights[s]*(1-r[s]))+(widths[s]*r[s]) | s in circuits where s != c], y[c])
+    member([0] ++ [x[s] + real_widths[s] | s in circuits where s != c], x[c]) /\
+    member([0] ++ [y[s] + real_heights[s] | s in circuits where s != c], y[c])
   );
 
 %symmetry breacking , il circuito più grande sempre in basso a sinistra  
@@ -43,14 +45,8 @@ constraint
 solve :: 
   seq_search([
       int_search([plate_height], first_fail, indomain_min, complete),
-      %int_search([y[r] | r in ordered_c], input_order, indomain_min,complete),
-      %int_search([x[r] | r in ordered_c], input_order, indomain_min,complete),
+      bool_search(r,input_order, indomain_min,complete)
       ])
   minimize plate_height;
 
 %output ["Height  : ", show(plate_height)]
-
-
-
-
-
