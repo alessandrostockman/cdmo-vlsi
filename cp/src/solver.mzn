@@ -46,6 +46,9 @@ constraint symmetry_breaking_constraint(
   } in lex_less([y[o1],x[o1]], [y[o2],x[o2]])
 );
 
+% Precedence constraint between same sized circuits
+constraint forall(i in circuits, j in i+1..num_circuits) ( (widths[i] = widths[j] /\ heights[i] = heights[j]) -> (x[i] <= x[j] /\ y[i] <= y[j]) );
+
 solve :: 
   seq_search([
     int_search([plate_height], first_fail, indomain_min, complete),
