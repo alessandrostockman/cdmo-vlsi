@@ -1,66 +1,73 @@
 import os
 import time
 import z3
+from z3 import Optimize, And, Or, Implies, Bool, Int
 from copy import copy
+import numpy as np
 
-def solve_sat(data, timeuout=60*5, rotation=False):
+def solve_sat(data, timeout=60*5, rotation=False):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
-    w, h = ([ i for i, j in circuits ], [ j for i, j in circuits ])
+    w, h = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
 
-    x = [ z3.Int('X_%i' % (i + 1)) for i in range(circuits_num) ]
-    y = [ z3.Int('Y_%i' % (i + 1)) for i in range(circuits_num) ]
-    upper_bound = sum(h)
+    x = [Int(f'x_{i}') for i in range(circuits_num) ]
+    y = [Int(f'y_{i}') for i in range(circuits_num) ]
 
-    constraint1, constraint2, constraint3, constraint4 = [], [], [], []
+    lr = [[Bool(f"l_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
+    ud = [[Bool(f"u_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
 
-    max_y = z3.Int('max_y')
+    areas_index = np.argsort([h[i]*w[i] for i in range(circuits_num)])
+    biggests = areas_index[-1], areas_index[-2]
 
-    for i, (xi, yi, hi, wi) in enumerate(zip(x, y, h, w)):
-        constraint1.append(z3.And(xi >= 0, xi + wi <= plate_width)) # xs domain upper bound
-        constraint2.append(z3.And(yi >= 0, yi + hi <= max_y)) # ys domain upper bound
 
-    constraint1.append(max_y <= upper_bound)
+    sol = Optimize()
+
+    max_y = Int('max_y')
+
+    def at_least_one(bool_vars):
+        return Or(bool_vars)
+
+    #non overlap 
+    for i in range(circuits_num):
+        xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
+
+        sol.add(And(xi >= 0, xi + wi <= plate_width))
+        sol.add(And(yi >= 0, yi + hi <= max_y))
+        for j in range(i+1, circuits_num):
+
+            xj, yj, wj, hj = x[j], y[j], w[j], h[j]
+
+            sol.add(at_least_one((lr[i][j], lr[j][i], ud[i][j], ud[j][i])))
+            sol.add(Implies(lr[i][j], xi+wi <= xj))
+            sol.add(Implies(lr[j][i], xj+wj <= xi))
+            sol.add(Implies(ud[i][j], yi+hi <= yj))
+            sol.add(Implies(ud[j][i], yj+hj <= yi))
         
-    for i, (xi, yi, hi, wi) in enumerate(zip(x, y, h, w)):
-        for j, (xj, yj, hj, wj) in enumerate(zip(x, y, h, w)):
-            if j > i:
-                constraint3.append(
-                    z3.Implies(
-                        z3.Or(
-                            z3.And(yi <= yj + hj - 1, yi >= yj), 
-                            z3.And(yi + hi - 1 <= yj + hj - 1, yi + hi - 1 >= yj)
-                        ),
-                        z3.Or(xi + wi - 1 < xj, xi > xj + wj - 1)
-                    )
-                )
+            if wi == wj and hi == hj:
+                sol.add(lr[j][i] == False)
+                sol.add(Implies(ud[i][j], lr[j][i]))
+            
+            if wi+wj > plate_width:
+                sol.add(lr[j][i] == False)
+                sol.add(lr[j][i] == False)
+            
+            sol.add(Implies(hi + hj > max_y, And(ud[j][i] == False, ud[i][j] == False)))
+            
+    
+    
+    sol.add(And(lr[biggests[1]][biggests[0]] == False, ud[biggests[1]][biggests[0]] == False))
 
-                constraint4.append(
-                    z3.Implies(
-                        z3.Or(
-                            z3.And(xi <= xj + wj - 1, xi >= xj), 
-                            z3.And(xi + wi - 1 <= xj + wj - 1, xi + wi - 1 >= xj)
-                        ),
-                        z3.Or(yi + hi - 1 < yj, yi > yj + hj - 1)
-                    )
-                )
+    sol.add(max_y <= sum(h))
+        
 
-    opt = z3.Optimize()
-    opt.set(timeout=timeout*1000)
+    sol.set(timeout=timeout*1000)
 
-    opt.add(
-        constraint1 + 
-        constraint2 + 
-        constraint3 +  
-        constraint4
-    )
-
-    opt.minimize(max_y)
+    sol.minimize(max_y)
 
     start_time = time.time()
-    if opt.check() == z3.sat:
-        m = opt.model()
+    if sol.check() == z3.sat:
+        m = sol.model()
         circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
         plate_height = m.eval(max_y).as_long()
 
