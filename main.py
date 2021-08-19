@@ -6,7 +6,7 @@ import numpy as np
 
 from cp.src.solver import solve_cp
 from sat.src.solver import solve_sat
-from lib.utils import load_instance, load_solution, plot_result, write_solution
+from lib.utils import load_instance, load_solution, plot_result, plot_statistics, write_solution
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -76,16 +76,7 @@ if __name__ == "__main__":
         solutions.append((sol, input))
 
     if args.stats:
-        stats_times = np.array(stats_times)
-        stats_times[stats_times == None] = 0
-        fig, ax = plt.subplots()
-        r = np.arange(0, len(stats_times))
-        ax.bar(r, stats_times)
-        ax.set_xticks(r)
-
-        ax.set(xlabel='Instance', ylabel='Time (s)', title='')
-        ax.grid()
-        plt.show()
+        plot_statistics(stats_times)
 
     if args.plot:
         for sol, title in solutions:

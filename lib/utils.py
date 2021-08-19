@@ -39,6 +39,18 @@ def plot_result(plate, circuits, plot_title):
     ax.set_yticks(np.arange(plate[1]))
     plt.show()
 
+def plot_statistics(stats_times):
+    stats_times = np.array(stats_times)
+    stats_times[stats_times == None] = 0
+    fig, ax = plt.subplots()
+    r = np.arange(0, len(stats_times))
+    ax.bar(r, stats_times)
+    ax.set_xticks(r)
+
+    ax.set(xlabel='Instance', ylabel='Time (s)', title='')
+    ax.grid()
+    plt.show()
+
 def plot_result_alternative(plate, circuits, plot_title):
     plate_w, plate_h = plate
     matrix = np.zeros(plate[::-1], dtype=int)
