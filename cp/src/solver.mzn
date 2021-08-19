@@ -21,14 +21,11 @@ var lower_bound..upper_bound: plate_height;
 int: upper_bound = sum(heights); % Plate height upper bound: circuits height sum
 int: lower_bound = max(heights); % Plate height lower bound: max circuit height
 
-array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]); % solo heights, max , oppure area ??
+array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]);
 
-% ==== Global constraints ==== 
+% ==== Constraints ==== 
 
 constraint forall(c in ordered_c)(x[c] + widths[c] <= plate_width /\ y[c] + heights[c] <= plate_height);
-
-constraint diffn(x,y,widths,heights);
-constraint cumulative(x, widths, heights, plate_height) /\ cumulative(y, heights, widths, plate_width);
 
 % Dominance constraint, adjacent circuits are always better
 constraint 
@@ -37,7 +34,22 @@ constraint
     member([0] ++ [y[s] + heights[s] | s in circuits where s != r], y[r])
   );
 
+% ==== Global constraints ==== 
+
+constraint diffn(x,y,widths,heights);
+constraint cumulative(x, widths, heights, plate_height) /\ cumulative(y, heights, widths, plate_width);
+
 % ==== Symmetry breaking constraints ====
+
+% Precedence constraint between same sized circuits
+constraint symmetry_breaking_constraint(
+  forall (r in circuits) (
+    let {
+      array[int] of int: equals = [i | i in r+1..num_circuits where widths[i] = widths[r] /\ heights[i] = heights[r]]
+    } in 
+      forall (i in 1..length(equals)-1) (lex_less([ y[equals[i-1]], x[equals[i-1]] ], [ y[equals[i]],x[equals[i]] ]))
+  )
+);
 
 % The biggest circuit is always placed under and on the left wrt the second biggest
 constraint symmetry_breaking_constraint(
@@ -45,9 +57,6 @@ constraint symmetry_breaking_constraint(
     int: o1 = ordered_c[1], int: o2 = ordered_c[2]
   } in lex_less([y[o1],x[o1]], [y[o2],x[o2]])
 );
-
-% Precedence constraint between same sized circuits
-constraint forall(i in circuits, j in i+1..num_circuits) ( (widths[i] = widths[j] /\ heights[i] = heights[j]) -> (x[i] <= x[j] /\ y[i] <= y[j]) );
 
 solve :: 
   seq_search([
