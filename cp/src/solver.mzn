@@ -21,7 +21,7 @@ var lower_bound..upper_bound: plate_height;
 int: upper_bound = sum(heights); % Plate height upper bound: circuits height sum
 int: lower_bound = max(heights); % Plate height lower bound: max circuit height
 
-array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]); % solo heights, max , oppure area ??
+array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]);
 
 % ==== Constraints ==== 
 
