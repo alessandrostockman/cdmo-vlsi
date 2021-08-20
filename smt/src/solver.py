@@ -8,7 +8,7 @@ def solve_smt(data, timeout=60*5, rotation=False):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
-    w, h = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
+    widths, heights = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
 
     x = [Int(f'x_{i}') for i in range(circuits_num) ]
     y = [Int(f'y_{i}') for i in range(circuits_num) ]
@@ -16,13 +16,20 @@ def solve_smt(data, timeout=60*5, rotation=False):
     lr = [[Bool(f"l_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
     ud = [[Bool(f"u_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
 
-    areas_index = np.argsort([h[i]*w[i] for i in range(circuits_num)])
+    w = [Int(f'w_{i}') for i in range(circuits_num) ]
+    h = [Int(f'h_{i}') for i in range(circuits_num) ]
+
+    areas_index = np.argsort([heights[i]*widths[i] for i in range(circuits_num)])
     biggests = areas_index[-1], areas_index[-2]
 
 
     sol = Optimize()
 
     max_y = Int('max_y')
+
+    #handling rotation 
+    for i in range(circuits_num):
+        sol.add(Or(And(w[i]==widths[i],h[i]==heights[i]),And(w[i]==heights[i],h[i]==widths[i])))
 
     for i in range(circuits_num):
         xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
@@ -46,9 +53,7 @@ def solve_smt(data, timeout=60*5, rotation=False):
                 sol.add(Implies(ud[i][j], lr[j][i]))
             
             #if two rectangles cannot be packed side to side along the x axis 
-            if wi+wj > plate_width:
-                sol.add(lr[j][i] == False)
-                sol.add(lr[j][i] == False)
+            sol.add(Implies(wi+wj > plate_width, And(lr[j][i] == False,lr[j][i] == False)))
             
             #if two rectangles cannot be packed one over the other along the y axis
             sol.add(Implies(hi + hj > max_y, And(ud[j][i] == False, ud[i][j] == False)))
@@ -66,7 +71,7 @@ def solve_smt(data, timeout=60*5, rotation=False):
     start_time = time.time()
     if sol.check() == z3.sat:
         m = sol.model()
-        circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
+        circuits_pos = [(m.eval(wi), m.eval(hi), m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
         plate_height = m.eval(max_y).as_long()
 
         return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
