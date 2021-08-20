@@ -6,11 +6,12 @@ import numpy as np
 
 from cp.src.solver import solve_cp
 from sat.src.solver import solve_sat
+from smt.src.solver import solve_smt
 from lib.utils import load_instance, load_solution, plot_result, plot_statistics, write_solution
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat"])
+    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat", "smt"])
     parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
     parser.add_argument('-X', '--stats', help="", default=False, action='store_true')
     parser.add_argument('-A', '--average', help="", default=False, action='store_true')
@@ -54,6 +55,8 @@ if __name__ == "__main__":
                     sol, execution_time = solve_cp(instance, int(args.timeout), rotation=args.rotation)
                 if args.solver == "sat": 
                     sol, execution_time = solve_sat(instance, int(args.timeout), rotation=args.rotation)
+                if args.solver == "smt": 
+                    sol, execution_time = solve_smt(instance, int(args.timeout), rotation=args.rotation)
 
                 if sol is not None:
                     times.append(execution_time)

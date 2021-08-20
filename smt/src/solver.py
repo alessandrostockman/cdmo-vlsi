@@ -24,10 +24,6 @@ def solve_smt(data, timeout=60*5, rotation=False):
 
     max_y = Int('max_y')
 
-    def at_least_one(bool_vars):
-        return Or(bool_vars)
-
-    #non overlap 
     for i in range(circuits_num):
         xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
 
@@ -36,29 +32,32 @@ def solve_smt(data, timeout=60*5, rotation=False):
         for j in range(i+1, circuits_num):
 
             xj, yj, wj, hj = x[j], y[j], w[j], h[j]
-
-            sol.add(at_least_one((lr[i][j], lr[j][i], ud[i][j], ud[j][i])))
+            
+            #non overlap 
+            sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
             sol.add(Implies(lr[i][j], xi+wi <= xj))
             sol.add(Implies(lr[j][i], xj+wj <= xi))
             sol.add(Implies(ud[i][j], yi+hi <= yj))
             sol.add(Implies(ud[j][i], yj+hj <= yi))
-        
+
+            #two rectangles with same dimensions 
             if wi == wj and hi == hj:
                 sol.add(lr[j][i] == False)
                 sol.add(Implies(ud[i][j], lr[j][i]))
             
+            #if two rectangles cannot be packed side to side along the x axis 
             if wi+wj > plate_width:
                 sol.add(lr[j][i] == False)
                 sol.add(lr[j][i] == False)
             
+            #if two rectangles cannot be packed one over the other along the y axis
             sol.add(Implies(hi + hj > max_y, And(ud[j][i] == False, ud[i][j] == False)))
             
     
-    
+    #symmetry breaking : fix relative position of the two biggest rectangles 
     sol.add(And(lr[biggests[1]][biggests[0]] == False, ud[biggests[1]][biggests[0]] == False))
 
     sol.add(max_y <= sum(h))
-        
 
     sol.set(timeout=timeout*1000)
 
