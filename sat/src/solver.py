@@ -25,9 +25,10 @@ def solve_sat(data, timeout=60*5, rotation=False):
         solver.add(at_least_one(solver, bool_vars))
 
     start_time = time.time()
+    try_timeout = timeout
     for plate_height in range(lower_bound, upper_bound+1):
         sol = Solver()
-        sol.set(timeout=timeout*1000)
+        sol.set(timeout=try_timeout*1000)
         board = [[[Bool(f"b_{i}_{j}_{k}") for k in range(circuits_num)] for j in range(plate_height)] for i in range(plate_width)]
         rotations = None
         
@@ -44,23 +45,38 @@ def solve_sat(data, timeout=60*5, rotation=False):
                 min_dim = min(h[k], w[k])
 
                 configurations = []
+                configurations_r = []
                 for y in range(plate_height - min_dim + 1):
                     for x in range(plate_width - min_dim + 1):
                         conf1 = []
                         conf2 = []
+
                         for yk in range(h[k]):
                             for xk in range(w[k]):
-                                if y + h[k] < plate_height and x + w[k] < plate_width:
+                                if y + h[k] <= plate_height and x + w[k] <= plate_width:
                                     conf1.append(board[x+xk][y+yk][k])
-                                if y + w[k] < plate_height and x + h[k] < plate_width:
+                                if y + w[k] <= plate_height and x + h[k] <= plate_width:
                                     conf2.append(board[x+yk][y+xk][k])
-                           
-                        configurations.append(Or(all_true(sol, And(conf1, Not(rotations[k]))), all_true(sol, And(conf2, rotations[k]))))
-                sol.add(at_least_one(sol, configurations))
+                        
+                        if len(conf1) > 0:
+                            configurations.append(all_true(sol, conf1))
+
+                        if len(conf2) > 0:
+                            configurations_r.append(all_true(sol, conf2))
+
+                if len(configurations) > 0 and len(configurations_r) > 0:
+                    exactly_one(sol, [
+                        And(at_least_one(sol, configurations), Not(rotations[k])),
+                        And(at_least_one(sol, configurations_r), rotations[k])
+                    ])
+                elif len(configurations) > 0:
+                    sol.add(And(at_least_one(sol, configurations), Not(rotations[k])))
+                elif len(configurations_r) > 0:
+                    sol.add(And(at_least_one(sol, configurations_r), rotations[k]))
 
         for x in range(plate_width):
             for y in range(plate_height):
-                exactly_one(sol, [board[x][y][k] for k in range(circuits_num)])
+                sol.add(at_most_one(sol, [board[x][y][k] for k in range(circuits_num)]))
 
         if sol.check() == sat:
             m = sol.model()
@@ -81,7 +97,10 @@ def solve_sat(data, timeout=60*5, rotation=False):
                             found = True
 
             return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
-    
+        else:
+            try_timeout = round((timeout - (time.time() - start_time)))
+            if try_timeout < 0:
+                return None, 0
     return None, 0
 
 if __name__ == "__main__":
