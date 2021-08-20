@@ -1,79 +1,61 @@
 import os
 import time
-import z3
-from z3 import Optimize, And, Or, Implies, Bool, Int
-from copy import copy
-import numpy as np
+from z3 import And, Or, Bool, sat, Not, Solver
+from itertools import combinations
 
 def solve_sat(data, timeout=60*5, rotation=False):
     plate_width, circuits = data
     circuits_num = len(circuits)
 
     w, h = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
+    lower_bound = sum([h[i]*w[i] for i in range(circuits_num)]) // plate_width
+    upper_bound = sum(h)
 
-    x = [Int(f'x_{i}') for i in range(circuits_num) ]
-    y = [Int(f'y_{i}') for i in range(circuits_num) ]
+    def all_true(solver, bool_vars):
+        return And(bool_vars)
 
-    lr = [[Bool(f"l_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
-    ud = [[Bool(f"u_{i}_{j}") for j in range(circuits_num)] for i in range(circuits_num)]
-
-    areas_index = np.argsort([h[i]*w[i] for i in range(circuits_num)])
-    biggests = areas_index[-1], areas_index[-2]
-
-
-    sol = Optimize()
-
-    max_y = Int('max_y')
-
-    def at_least_one(bool_vars):
+    def at_least_one(solver, bool_vars):
         return Or(bool_vars)
 
-    #non overlap 
-    for i in range(circuits_num):
-        xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
+    def at_most_one(solver, bool_vars):
+        return [Not(And(pair[0], pair[1])) for pair in combinations(bool_vars, 2)]
 
-        sol.add(And(xi >= 0, xi + wi <= plate_width))
-        sol.add(And(yi >= 0, yi + hi <= max_y))
-        for j in range(i+1, circuits_num):
-
-            xj, yj, wj, hj = x[j], y[j], w[j], h[j]
-
-            sol.add(at_least_one((lr[i][j], lr[j][i], ud[i][j], ud[j][i])))
-            sol.add(Implies(lr[i][j], xi+wi <= xj))
-            sol.add(Implies(lr[j][i], xj+wj <= xi))
-            sol.add(Implies(ud[i][j], yi+hi <= yj))
-            sol.add(Implies(ud[j][i], yj+hj <= yi))
-        
-            if wi == wj and hi == hj:
-                sol.add(lr[j][i] == False)
-                sol.add(Implies(ud[i][j], lr[j][i]))
-            
-            if wi+wj > plate_width:
-                sol.add(lr[j][i] == False)
-                sol.add(lr[j][i] == False)
-            
-            sol.add(Implies(hi + hj > max_y, And(ud[j][i] == False, ud[i][j] == False)))
-            
-    
-    
-    sol.add(And(lr[biggests[1]][biggests[0]] == False, ud[biggests[1]][biggests[0]] == False))
-
-    sol.add(max_y <= sum(h))
-        
-
-    sol.set(timeout=timeout*1000)
-
-    sol.minimize(max_y)
+    def exactly_one(solver, bool_vars):
+        solver.add(at_most_one(solver, bool_vars))
+        solver.add(at_least_one(solver, bool_vars))
 
     start_time = time.time()
-    if sol.check() == z3.sat:
-        m = sol.model()
-        circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
-        plate_height = m.eval(max_y).as_long()
+    for plate_height in range(lower_bound, upper_bound+1):
+        sol = Solver()
+        sol.set(timeout=timeout*1000)
+        board = [[[Bool(f"b_{i}_{j}_{k}") for k in range(circuits_num)] for j in range(plate_height)] for i in range(plate_width)]
+        
+        for k in range(circuits_num):
+            configurations = []
+            for y in range(plate_height - h[k] + 1):
+                for x in range(plate_width - w[k] + 1):
+                    configurations.append(all_true(sol, [board[x+xk][y+yk][k] for yk in range(h[k]) for xk in range(w[k])]))
+            sol.add(at_least_one(sol, configurations))
+        
+        for x in range(plate_width):
+            for y in range(plate_height):
+                exactly_one(sol, [board[x][y][k] for k in range(circuits_num)])
 
-        return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
-    else:
-        return None, 0
+        if sol.check() == sat:
+            m = sol.model()
+
+            circuits_pos = []
+            for k in range(circuits_num):
+                found = False
+                for x in range(plate_width):
+                    for y in range(plate_height):
+                        if not found and m.evaluate(board[x][y][k]):
+                            circuits_pos.append((w[k], h[k], x, y))
+                            found = True
+
+            return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
+    
+    return None, 0
 
 if __name__ == "__main__":
     import sys
