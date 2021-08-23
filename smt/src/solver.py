@@ -1,6 +1,6 @@
 import os
 import time
-from z3 import Optimize, And, Or, Implies, Int, sat, Sum, Product, If
+from z3 import Optimize, And, Or, Implies, Int, sat, Sum, Product, If, IntVector
 import numpy as np
 
 class SolverSMT:
@@ -15,13 +15,13 @@ class SolverSMT:
         widths, heights = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
         start_time = time.time()
 
-        x = [Int(f'x_{i}') for i in range(circuits_num) ]
-        y = [Int(f'y_{i}') for i in range(circuits_num) ]
+        x = IntVector('x',circuits_num)  
+        y = IntVector('y',circuits_num)
 
         w,h = widths, heights    #actual widths and heights if rotation allowed
         if self.rotation:
-            w = [Int(f'w_{i}') for i in range(circuits_num) ]
-            h = [Int(f'h_{i}') for i in range(circuits_num) ]
+            w = IntVector('w',circuits_num)  #[Int(f'w_{i}') for i in range(circuits_num) ]
+            h = IntVector('h',circuits_num)  #[Int(f'h_{i}') for i in range(circuits_num) ]
 
         areas_index = np.argsort([heights[i]*widths[i] for i in range(circuits_num)])
         biggests = areas_index[-1], areas_index[-2]
@@ -33,7 +33,8 @@ class SolverSMT:
         #handling rotation 
         if self.rotation:
             for i in range(circuits_num):
-                sol.add(Or(And(w[i]==widths[i],h[i]==heights[i]),And(w[i]==heights[i],h[i]==widths[i])))
+                # if rotation allowed and a circuit is square  (width=hight) then force it to be not rotated 
+                sol.add(If(w[i]==h[i],And(w[i]==widths[i],h[i]==heights[i]),Or(And(w[i]==widths[i],h[i]==heights[i]),And(w[i]==heights[i],h[i]==widths[i]))))               
 
         for i in range(circuits_num):
             xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
@@ -60,7 +61,7 @@ class SolverSMT:
         for i in range(circuits_num):
             sol.add(And(x[i]>=0,x[i]<=plate_width-self.min(w)-1))
             sol.add(And(y[i]>=0,y[i]<=Sum(h)-self.min(h)-1))
-        
+               
         #symmetry breaking : fix relative position of the two biggest rectangles 
         sol.add(Or(x[biggests[1]] > x[biggests[0]], And(x[biggests[1]] == x[biggests[0]], y[biggests[1]] >= y[biggests[0]])))
 
