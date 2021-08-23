@@ -1,4 +1,5 @@
 include "globals.mzn";
+include "gecode.mzn"; % for LNS
 
 % ==== Input variables ==== 
 
@@ -25,6 +26,7 @@ array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | 
 
 % ==== Constraints ==== 
 
+%constraint forall(c in circuits) (x[c]<=plate_width-min(widths)-1) ::domain ;
 constraint forall(c in ordered_c)(x[c] + widths[c] <= plate_width /\ y[c] + heights[c] <= plate_height);
 
 % Dominance constraint, adjacent circuits are always better
@@ -37,7 +39,8 @@ constraint
 % ==== Global constraints ==== 
 
 constraint diffn(x,y,widths,heights);
-constraint cumulative(x, widths, heights, plate_height) /\ cumulative(y, heights, widths, plate_width);
+constraint cumulative(x, widths, heights, plate_height);
+constraint cumulative(y, heights, widths, plate_width);
 
 % ==== Symmetry breaking constraints ====
 
@@ -54,11 +57,11 @@ constraint symmetry_breaking_constraint(
 % The biggest circuit is always placed under and on the left wrt the second biggest
 constraint symmetry_breaking_constraint(
   let {
-    int: o1 = ordered_c[1], int: o2 = ordered_c[2]
-  } in lex_less([y[o1],x[o1]], [y[o2],x[o2]])
+    int: c1 = ordered_c[1], int: c2 = ordered_c[2]
+  } in lex_less([y[c1],x[c1]], [y[c2],x[c2]])
 );
 
-solve :: 
-  seq_search([
-    int_search([plate_height], first_fail, indomain_min, complete),
-  ]) minimize plate_height;
+solve 
+  :: int_search([plate_height], first_fail, indomain_min, complete)
+  :: relax_and_reconstruct([plate_height], 70) 
+  minimize plate_height;

@@ -6,7 +6,7 @@ import numpy as np
 
 from cp.src.solver import solve_cp
 from sat.src.solver import solve_sat
-from smt.src.solver import solve_smt
+from smt.src.solver2 import solve_smt
 from lib.utils import load_instance, load_solution, plot_result, plot_statistics, write_solution
 
 if __name__ == "__main__":
