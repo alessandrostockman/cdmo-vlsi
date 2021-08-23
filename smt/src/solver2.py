@@ -1,7 +1,7 @@
 import os
 import time
 import z3
-from z3 import Optimize, And, Or, Implies, Int, Sum, If
+from z3 import Optimize, And, Or, Implies, Int, Sum, If, Product
 import numpy as np
 
 def min_z3(vars):
@@ -66,7 +66,7 @@ def solve_smt(data, timeout=60*5, rotation=False):
     sol.add(Or(x[biggests[1]] > x[biggests[0]], And(x[biggests[1]] == x[biggests[0]], y[biggests[1]] >= y[biggests[0]])))
 
     #area constraint 
-    sol.add(max_y >= Sum([h[i]*w[i] for i in range(circuits_num)]) // plate_width )
+    sol.add(max_y >= (Sum([Product(h[i]*w[i]) for i in range(circuits_num)]) // plate_width))
     sol.add(max_y <= Sum(h))
 
     sol.set(timeout=timeout*1000)
