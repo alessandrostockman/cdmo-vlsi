@@ -19,8 +19,8 @@ var lower_bound..upper_bound: plate_height;
 
 % ==== Support variables ==== 
 
-int: upper_bound = sum(heights); % Plate height upper bound: circuits height sum
-int: lower_bound = max(heights); % Plate height lower bound: max circuit height
+int: upper_bound = sum([max(heights[i], widths[i]) | i in circuits]);
+int: lower_bound = max(heights ++ widths);
 
 array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]); % solo heights, max , oppure area ??
 
