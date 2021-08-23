@@ -50,6 +50,7 @@ def plot_statistics(stats_times):
     ax.set_yscale('log')
 
     ax.set(xlabel='Instance', ylabel='Time (s)', title='')
+    ax.set_yscale('log')
     ax.grid()
     plt.show()
 
