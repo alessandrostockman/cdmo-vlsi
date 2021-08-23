@@ -10,7 +10,7 @@ class SolverCP:
         self.solver_dir = os.path.join(solver_dir, "src")
 
     def solve(self, data):
-        solver_file = os.path.join(self.solver_dir, "solver.mzn") if not self.rotation else os.path.join(self.solver_dir, "solver_rotation")
+        solver_file = os.path.join(self.solver_dir, "solver.mzn") if not self.rotation else os.path.join(self.solver_dir, "solver_rotation.mzn")
         model = Model(solver_file)
         gecode = Solver.lookup("gecode")
 
