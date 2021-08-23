@@ -72,7 +72,6 @@ class SolverSMT:
 
         sol.minimize(max_y)
 
-        start_time = time.time()
         if sol.check() == sat:
             m = sol.model()
             if self.rotation:
