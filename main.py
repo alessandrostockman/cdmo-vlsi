@@ -1,25 +1,13 @@
-from argparse import ArgumentParser
+from ctypes import ArgumentError
 import os
-import time
-import matplotlib.pyplot as plt
-import numpy as np
+from cp.src.solver import SolverCP
+from sat.src.solver import SolverSAT
+from smt.src.solver import SolverSMT
 
-from cp.src.solver import solve_cp
-from sat.src.solver import solve_sat
-from smt.src.solver import solve_smt
-from lib.utils import load_instance, load_solution, plot_result, plot_statistics, write_solution
+from lib.utils import load_solution, plot_result, solve_and_write, parse_arguments
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat", "smt"])
-    parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
-    parser.add_argument('-X', '--stats', help="", default=False, action='store_true')
-    parser.add_argument('-A', '--average', help="", default=False, action='store_true')
-    parser.add_argument('-I', '--instances', help="", default="res/instances")
-    parser.add_argument('-O', '--output', help="", default="res/solutions")
-    parser.add_argument('-T', '--timeout', help="", default=5*60)
-    parser.add_argument('-R', '--rotation', help="", default=False, action='store_true')
-    args = parser.parse_args()
+    args = parse_arguments(main=True)
 
     if os.path.isdir(args.instances):
         inputs = sorted([os.path.join(args.instances, i) for i in os.listdir(args.instances) if os.path.isfile(os.path.join(args.instances, i))])
@@ -30,58 +18,27 @@ if __name__ == "__main__":
     else:
         inputs = [args.instances]
 
-    solutions = []
-    stats_times = []
-    
-    for input in inputs:
-        filename = os.path.basename(input)
-        output = os.path.join(args.output, filename)
-        if 'ins' in filename:
-            output = output.replace('ins', 'out')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    solver_dir = os.path.join(base_dir, args.solver)
 
-        if args.solver == "null":
-            if not os.path.isfile(output):
-                continue
-            sol = load_solution(output)
-        else:
-            instance = load_instance(input)
-            first = True
-            times = []
-            sol = None
-            execution_time = None
-            while first or args.average and len(times) < 10:
-                first = False
-                if args.solver == "cp": 
-                    sol, execution_time = solve_cp(instance, int(args.timeout), rotation=args.rotation)
-                if args.solver == "sat": 
-                    sol, execution_time = solve_sat(instance, int(args.timeout), rotation=args.rotation)
-                if args.solver == "smt": 
-                    sol, execution_time = solve_smt(instance, int(args.timeout), rotation=args.rotation)
+    if args.solver == "cp": 
+        solver = SolverCP(int(args.timeout), rotation=args.rotation, solver_dir=solver_dir)
+    elif args.solver == "sat": 
+        solver = SolverSAT(int(args.timeout), rotation=args.rotation) 
+    elif args.solver == "smt": 
+        solver = SolverSMT(int(args.timeout), rotation=args.rotation)
+    elif args.plot:    
+        output_dir = os.path.join(base_dir, args.output)
+        for input in inputs:
+            filename = os.path.basename(os.path.join(base_dir, input))
+            output = os.path.join(output_dir, filename)
+            if 'ins' in filename:
+                output = output.replace('ins', 'out')
+            plate, circuits_pos = load_solution(output)
+            plot_result(plate, circuits_pos, filename)
+        exit()
+    else:
+        raise ArgumentError("Either choose a solver or ask for plots")
 
-                if sol is not None:
-                    times.append(execution_time)
-                    if not args.average:
-                        print("Problem {0} solved in {1}s".format(input, round(execution_time, 4)))
-                else:
-                    print("Problem {0} not solved".format(input))
-            
-            if sol is not None:
-                if args.average:
-                    avg_time = sum(times) / len(times)
-                    print("Problem {0} solved in an average of {1}s".format(input, round(avg_time, 4)))
-                    stats_times.append(avg_time)
-                else:
-                    stats_times.append(execution_time)
-                write_solution(output, sol)
-            else:
-                stats_times.append(None)
-        
-        solutions.append((sol, input))
+    solve_and_write(solver, base_dir, solver_dir, inputs, average=args.average, stats=args.stats, plot=args.plot)    
 
-    if args.stats:
-        plot_statistics(stats_times)
-
-    if args.plot:
-        for sol, title in solutions:
-            plate, circuits_pos = sol
-            plot_result(plate, circuits_pos, title)

@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+import os
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -78,3 +80,59 @@ def write_solution(filename, solution):
         for c in circuits_pos:
             w, h, x, y = c
             sol.write("{0} {1} {2} {3}\n".format(w, h, x, y))
+
+def solve_and_write(solver, base_dir, solver_dir, inputs, average=False, stats=False, plot=False):
+    output_dir = os.path.join(solver_dir, "out")
+
+    stats_times = []
+    for input in inputs:
+        filename = os.path.basename(os.path.join(base_dir, input))
+        output = os.path.join(output_dir, filename)
+        if 'ins' in filename:
+            output = output.replace('ins', 'out')
+
+        instance = load_instance(os.path.join(base_dir, input))
+
+        sol = None
+        execution_time = None
+        if average:
+            times = []
+            for _ in range(10):
+                sol, execution_time = solver.solve(instance)
+                if sol is not None:
+                    times.append(execution_time)
+
+            execution_time = sum(times) / len(times)
+        else:
+            sol, execution_time = solver.solve(instance)
+
+        if sol is not None:
+            print("Problem {0} solved in {1}s".format(input, round(execution_time, 4)))
+            stats_times.append(execution_time)
+            write_solution(output, sol)
+
+            plate, circuits_pos = sol
+
+            if plot:
+                plot_result(plate, circuits_pos, input)
+        else:
+            print("Problem {0} not solved".format(input))
+            stats_times.append(None)
+
+    if stats:
+        plot_statistics(stats_times)
+
+def parse_arguments(main=True):
+    parser = ArgumentParser()
+
+    if main:
+        parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat", "smt"])
+        parser.add_argument('-I', '--instances', help="", default="res/instances")
+        parser.add_argument('-O', '--output', help="", default=None)
+        
+    parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
+    parser.add_argument('-X', '--stats', help="", default=True, action='store_false')
+    parser.add_argument('-A', '--average', help="", default=False, action='store_true')
+    parser.add_argument('-T', '--timeout', help="", default=300)
+    parser.add_argument('-R', '--rotation', help="", default=False, action='store_true')
+    return parser.parse_args()
