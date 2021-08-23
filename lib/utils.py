@@ -46,8 +46,8 @@ def plot_statistics(stats_times):
     stats_times[stats_times == None] = 0
     fig, ax = plt.subplots()
     r = np.arange(0, len(stats_times))
-    ax.bar(r, stats_times)
-    ax.set_xticks(r)
+    ax.bar(r, stats_times, 0.4)
+    ax.set_yscale('log')
 
     ax.set(xlabel='Instance', ylabel='Time (s)', title='')
     ax.grid()
