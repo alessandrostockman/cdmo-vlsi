@@ -44,14 +44,16 @@ def plot_result(plate, circuits, plot_title):
 def plot_statistics(stats_times):
     stats_times = np.array(stats_times)
     stats_times[stats_times == None] = 0
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     r = np.arange(0, len(stats_times))
     ax.bar(r, stats_times, 0.4, color='blue')
     ax.set_yscale('log')
 
+    ax.set_xticks(r)
     ax.set(xlabel='Instance', ylabel='Time (s)', title='')
     
     plt.show()
+
 
 def plot_result_alternative(plate, circuits, plot_title):
     plate_w, plate_h = plate
