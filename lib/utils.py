@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
 import os
+import pickle
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import datetime
+import tkinter as tk
 
 def load_instance(filename):
     with open(filename, 'r') as sol:
@@ -55,13 +57,48 @@ def plot_statistics(output_dir,stats_times):
 
     ax.grid(which='minor',color='gray',linestyle='--')
 
-    now = datetime.datetime.now().strftime('%d-%m-%y_%H-%M')
-    l = ["times",now+".png"]
-    path = os.path.join(output_dir, *l)
-    plt.savefig(path, dpi=300, bbox_inches='tight')
+    now = datetime.datetime.now().strftime('%y-%m-%d_%H-%M')
+    stats_filepath = os.path.join(output_dir, "times", now)
+    plt.savefig(stats_filepath + ".png", dpi=300, bbox_inches='tight')
+
+    with open(stats_filepath + ".pickle", 'wb') as fp:
+        pickle.dump(stats_times, fp)
     
     plt.show()
 
+def plot_global_statistics(base_dir):
+    root = tk.Tk()
+    root.withdraw()
+    
+    global_times = {}
+    key = input("Enter statistics type label: ")
+
+    while key != "":
+        print("Select", key, "stats file")
+        file_path = tk.filedialog.askopenfilename()
+        with open (file_path, 'rb') as fp:
+            global_times[key] = pickle.load(fp)
+        key = input("Enter statistics type label (Empty string to end): ")
+
+    instances_num = min([len(val) for val in global_times.values()])
+    r = np.arange(0, instances_num)
+    bar_width = (1 / instances_num) * 0.75
+
+    plt.figure(figsize=(12.8, 7.2))
+    for i, (key, stats_times) in enumerate(global_times.items()):
+        #TODO: Fix even number of columns
+        plt.bar(r + (bar_width / 2 * (2*i-(instances_num-1))), stats_times, bar_width, label=key)
+    plt.xticks(r)
+    plt.xlabel("Instance")
+    plt.yscale('log')
+    plt.ylabel("Time (s)")
+    plt.tick_params(axis='y',which='both')
+    plt.grid(which='minor',color='gray',linestyle='--')
+    plt.legend()
+
+    now = datetime.datetime.now().strftime('%y-%m-%d_%H-%M')
+    plt.savefig(os.path.join(base_dir, "res", now + ".png"), dpi=300, bbox_inches='tight')
+    plt.show()
 
 def plot_result_alternative(plate, circuits, plot_title):
     plate_w, plate_h = plate
@@ -139,6 +176,7 @@ def parse_arguments(main=True):
         parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat", "smt"])
         parser.add_argument('-I', '--instances', help="", default="res/instances")
         parser.add_argument('-O', '--output', help="", default=None)
+        parser.add_argument('-B', '--bar', help="", default=False, action='store_true')
         
     parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
     parser.add_argument('-X', '--stats', help="", default=True, action='store_false')

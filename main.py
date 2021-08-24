@@ -4,10 +4,15 @@ from cp.src.solver import SolverCP
 from sat.src.solver import SolverSAT
 from smt.src.solver import SolverSMT
 
-from lib.utils import load_solution, plot_result, solve_and_write, parse_arguments
+from lib.utils import load_solution, plot_global_statistics, plot_result, solve_and_write, parse_arguments
 
 if __name__ == "__main__":
     args = parse_arguments(main=True)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if args.bar:
+        plot_global_statistics(base_dir)
+        exit()
 
     if os.path.isdir(args.instances):
         inputs = sorted([os.path.join(args.instances, i) for i in os.listdir(args.instances) if os.path.isfile(os.path.join(args.instances, i))])
@@ -18,7 +23,6 @@ if __name__ == "__main__":
     else:
         inputs = [args.instances]
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
     solver_dir = os.path.join(base_dir, args.solver)
 
     if args.solver == "cp": 
