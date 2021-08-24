@@ -45,7 +45,7 @@ def plot_result(plate, circuits, plot_title):
 def plot_statistics(output_dir,stats_times):
     stats_times = np.array(stats_times)
     stats_times[stats_times == None] = 0
-    _, ax = plt.subplots()
+    _, ax = plt.subplots(1, 1, figsize=(12.8, 7.2))
     r = np.arange(0, len(stats_times))
     ax.bar(r, stats_times, 0.4, color='blue')
     ax.set_yscale('log')
