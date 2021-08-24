@@ -1,6 +1,6 @@
 import os
 import time
-from z3 import And, Or, Bool, sat, Not, Solver
+from z3 import And, Or, Bool, sat, Not, Solver, Implies
 from itertools import combinations
 
 class SolverSAT:
@@ -22,12 +22,13 @@ class SolverSAT:
         try_timeout = self.timeout
         for plate_height in range(lower_bound, upper_bound+1):
             self.sol = Solver()
-            self.sol.set(timeout=try_timeout*1000)
+            self.sol.set(timeout=self.timeout*1000)
             board, rotations = self.add_constraints(plate_height)
 
+            solve_time = time.time()
             if self.sol.check() == sat:
                 circuits_pos = self.evaluate(plate_height, board, rotations)
-                return ((self.plate_width, plate_height), circuits_pos), (time.time() - start_time)
+                return ((self.plate_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
                 try_timeout = round((self.timeout - (time.time() - start_time)))
                 if try_timeout < 0:
@@ -50,14 +51,26 @@ class SolverSAT:
     def add_constraints(self, plate_height):
         board = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in range(self.plate_width)]
         rotations = None
-        
+
+        xs = [[Bool(f"x_{i}_{j}") for j in range(self.circuits_num)] for i in range(self.plate_width)]
+        ys = [[Bool(f"y_{i}_{j}") for j in range(self.circuits_num)] for i in range(plate_height)]
+
+        for k in range(self.circuits_num):
+            for y in range(plate_height):
+                p = self.at_least_one([board[x][y][k] for x in range(self.plate_width)])
+                self.sol.add(And(Implies(ys[y][k], p), Implies(p, ys[y][k])))
+            for x in range(self.plate_width):
+                p = self.at_least_one([board[x][y][k] for y in range(plate_height)])
+                self.sol.add(And(Implies(xs[x][k], p), Implies(p, xs[x][k])))
+
         if not self.rotation:
             for k in range(self.circuits_num):
                 configurations = []
                 for y in range(plate_height - self.h[k] + 1):
                     for x in range(self.plate_width - self.w[k] + 1):
                         configurations.append(self.all_true([board[x+xk][y+yk][k] for yk in range(self.h[k]) for xk in range(self.w[k])]))
-                self.sol.add(self.at_least_one(configurations))
+                            
+                self.exactly_one(configurations)
         else:
             rotations = [Bool(f"r_{k}") for k in range(self.circuits_num)]
             for k in range(self.circuits_num):
@@ -97,6 +110,27 @@ class SolverSAT:
             for y in range(plate_height):
                 self.sol.add(self.at_most_one([board[x][y][k] for k in range(self.circuits_num)]))
 
+        prev = []
+        flat_x = [xs[x][k] for x in range(self.plate_width) for k in range(self.circuits_num)]
+        flat_x_r = [xs[self.plate_width - x - 1][k] for x in range(self.plate_width) for k in range(self.circuits_num)]
+        for x in range(len(flat_x)):
+            if len(prev) > 0:
+                self.sol.add(Implies(And(prev), Implies(flat_x[x], flat_x_r[x])))
+            else:
+                self.sol.add(Implies(flat_x[x], flat_x_r[x]))
+            prev.append(And(Implies(flat_x[x], flat_x_r[x]), Implies(flat_x_r[x], flat_x[x])))
+
+        prev = []
+        flat_y = [ys[y][k] for y in range(plate_height) for k in range(self.circuits_num)]
+        flat_y_r = [ys[plate_height - y - 1][k] for y in range(plate_height) for k in range(self.circuits_num)]
+        for y in range(len(flat_y)):
+            if len(prev) > 0:
+                self.sol.add(Implies(And(prev), Implies(flat_y[y], flat_y_r[y])))
+            else:
+                self.sol.add(Implies(flat_x[y], flat_x_r[y]))
+
+            prev.append(And(Implies(flat_y[y], flat_y_r[y]), Implies(flat_y_r[y], flat_y[y])))
+        
         return board, rotations
 
     def evaluate(self, plate_height, board, rotations):
