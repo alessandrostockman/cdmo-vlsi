@@ -1,5 +1,5 @@
 include "globals.mzn";
-include "gecode.mzn"; % for LNS
+include "gecode.mzn"; % enabling LNS
 
 % ==== Input variables ==== 
 
@@ -12,8 +12,8 @@ array[circuits] of int: heights; % Array of heights of the circuits
 
 % ==== Output variables ==== 
 
-array[circuits] of var 0..plate_width-1: x;  
-array[circuits] of var 0..upper_bound-1: y;  
+array[circuits] of var 0..plate_width-min(widths): x;  
+array[circuits] of var 0..upper_bound-min(heights): y;  
 
 var lower_bound..upper_bound: plate_height;
 
@@ -24,17 +24,13 @@ int: lower_bound = max(heights); % Plate height lower bound: max circuit height
 
 array[circuits] of int : ordered_c = sort_by(circuits, [-heights[c]*widths[c] | c in circuits]);
 
-% ==== Constraints ==== 
+% ==== Domain reduction ==== 
 
-%constraint forall(c in circuits) (x[c]<=plate_width-min(widths)-1) ::domain ;
-constraint forall(c in ordered_c)(x[c] + widths[c] <= plate_width /\ y[c] + heights[c] <= plate_height);
+constraint forall(c in circuits) (x[c]<=plate_width-widths[c])::domain;
+constraint forall(c in circuits) (y[c]<=plate_height-heights[c])::domain;
 
-% Dominance constraint, adjacent circuits are always better
-constraint 
-  forall(r in ordered_c)(
-    member([0] ++ [x[s] + widths[s] | s in circuits where s != r], x[r]) /\
-    member([0] ++ [y[s] + heights[s] | s in circuits where s != r], y[r])
-  );
+% ==== Main constraint ==== 
+constraint forall(c in circuits)(x[c] + widths[c] <= plate_width /\ y[c] + heights[c] <= plate_height);    %TODO: inutile 
 
 % ==== Global constraints ==== 
 
@@ -44,11 +40,18 @@ constraint cumulative(y, heights, widths, plate_width);
 
 % ==== Symmetry breaking constraints ====
 
+% Dominance constraint, adjacent circuits are always better
+constraint 
+  forall(c in circuits)(
+    member([0] ++ [x[o] + widths[o] | o in circuits where o != c], x[c]) /\
+    member([0] ++ [y[o] + heights[o] | o in circuits where o != c], y[c])
+  );
+
 % Precedence constraint between same sized circuits
 constraint symmetry_breaking_constraint(
-  forall (r in circuits) (
+  forall (c in circuits) (
     let {
-      array[int] of int: equals = [i | i in r+1..num_circuits where widths[i] = widths[r] /\ heights[i] = heights[r]]
+      array[int] of int: equals = [i | i in c+1..num_circuits where widths[i] = widths[c] /\ heights[i] = heights[c]]
     } in 
       forall (i in 1..length(equals)-1) (lex_less([ y[equals[i-1]], x[equals[i-1]] ], [ y[equals[i]],x[equals[i]] ]))
   )
@@ -61,6 +64,7 @@ constraint symmetry_breaking_constraint(
   } in lex_less([y[c1],x[c1]], [y[c2],x[c2]])
 );
 
+% === Search ===
 solve 
   :: int_search([plate_height], first_fail, indomain_min, complete)
   :: relax_and_reconstruct([plate_height], 70) 

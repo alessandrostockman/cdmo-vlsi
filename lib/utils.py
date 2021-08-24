@@ -4,6 +4,7 @@ from matplotlib import patches
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
+import datetime
 
 def load_instance(filename):
     with open(filename, 'r') as sol:
@@ -41,16 +42,23 @@ def plot_result(plate, circuits, plot_title):
     ax.set_yticks(np.arange(plate[1]))
     plt.show()
 
-def plot_statistics(stats_times):
+def plot_statistics(output_dir,stats_times):
     stats_times = np.array(stats_times)
     stats_times[stats_times == None] = 0
     _, ax = plt.subplots()
     r = np.arange(0, len(stats_times))
     ax.bar(r, stats_times, 0.4, color='blue')
     ax.set_yscale('log')
-
     ax.set_xticks(r)
+    ax.tick_params(axis='y',which='both')
     ax.set(xlabel='Instance', ylabel='Time (s)', title='')
+
+    ax.grid(which='minor',color='gray',linestyle='--')
+
+    now = datetime.datetime.now().strftime('%d-%m-%y_%H-%M')
+    l = ["times",now+".png"]
+    path = os.path.join(output_dir, *l)
+    plt.savefig(path, dpi=300, bbox_inches='tight')
     
     plt.show()
 
@@ -122,7 +130,7 @@ def solve_and_write(solver, base_dir, solver_dir, inputs, average=False, stats=F
             stats_times.append(None)
 
     if stats:
-        plot_statistics(stats_times)
+        plot_statistics(output_dir,stats_times)
 
 def parse_arguments(main=True):
     parser = ArgumentParser()

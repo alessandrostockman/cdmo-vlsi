@@ -13,7 +13,6 @@ class SolverSMT:
         circuits_num = len(circuits)
 
         widths, heights = ([ i for i, _ in circuits ], [ j for _, j in circuits ])
-        start_time = time.time()
 
         x = IntVector('x',circuits_num)  
         y = IntVector('y',circuits_num)
@@ -28,7 +27,7 @@ class SolverSMT:
 
         sol = Optimize()
 
-        max_y = Int('max_y')
+        plate_height = Int('plate_height')
 
         #handling rotation 
         if self.rotation:
@@ -40,7 +39,7 @@ class SolverSMT:
             xi, yi, wi, hi = x[i],y[i], w[i], h[i] 
 
             sol.add(And(xi >= 0, xi + wi <= plate_width))
-            sol.add(And(yi >= 0, yi + hi <= max_y))
+            sol.add(And(yi >= 0, yi + hi <= plate_height))
             for j in range(i+1, circuits_num):
 
                 xj, yj, wj, hj = x[j], y[j], w[j], h[j]
@@ -55,32 +54,33 @@ class SolverSMT:
                 sol.add(Implies(wi+wj > plate_width, Or(yi+hi <= yj, yj+hj <= yi)))
                 
                 #if two rectangles cannot be packed one over the other along the y axis
-                sol.add(Implies(hi + hj > max_y,  Or(xi+wi <= xj, xj+wj <= xi)))
+                sol.add(Implies(hi + hj > plate_height,  Or(xi+wi <= xj, xj+wj <= xi)))
 
         #bounds on variables range    
         for i in range(circuits_num):
-            sol.add(And(x[i]>=0,x[i]<=plate_width-self.min(w)-1))
-            sol.add(And(y[i]>=0,y[i]<=Sum(h)-self.min(h)-1))
+            sol.add(And(x[i]>=0,x[i]<=plate_width-self.min(w)))     
+            sol.add(And(y[i]>=0,y[i]<=Sum(h)-self.min(h)))          
                
         #symmetry breaking : fix relative position of the two biggest rectangles 
         sol.add(Or(x[biggests[1]] > x[biggests[0]], And(x[biggests[1]] == x[biggests[0]], y[biggests[1]] >= y[biggests[0]])))
 
         #area constraint 
-        sol.add(max_y >= (Sum([Product(h[i],w[i]) for i in range(circuits_num)]) / plate_width))
-        sol.add(max_y <= Sum(h))
+        sol.add(plate_height >= (Sum([Product(h[i],w[i]) for i in range(circuits_num)]) / plate_width))
+        sol.add(plate_height <= Sum(h))
 
         sol.set(timeout=self.timeout*1000)
 
-        sol.minimize(max_y)
+        sol.minimize(plate_height)
 
+        start_time = time.time()
         if sol.check() == sat:
             m = sol.model()
             if self.rotation:
                 circuits_pos = [(m.eval(wi), m.eval(hi), m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
             else : circuits_pos = [(wi, hi, m.eval(xi).as_long(), m.eval(yi).as_long()) for wi, hi, xi, yi in zip(w, h, x, y)]
-            plate_height = m.eval(max_y).as_long()
+            height = m.eval(plate_height).as_long()
 
-            return ((plate_width, plate_height), circuits_pos), (time.time() - start_time)
+            return ((plate_width, height), circuits_pos), (time.time() - start_time)
         else:
             return None, 0
 
