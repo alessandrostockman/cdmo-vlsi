@@ -19,8 +19,8 @@ class SolverSMT:
 
         w,h = widths, heights    #actual widths and heights if rotation allowed
         if self.rotation:
-            w = IntVector('w',circuits_num)  #[Int(f'w_{i}') for i in range(circuits_num) ]
-            h = IntVector('h',circuits_num)  #[Int(f'h_{i}') for i in range(circuits_num) ]
+            w = IntVector('w',circuits_num) 
+            h = IntVector('h',circuits_num)  
 
         areas_index = np.argsort([heights[i]*widths[i] for i in range(circuits_num)])
         biggests = areas_index[-1], areas_index[-2]
