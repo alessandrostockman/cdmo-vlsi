@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import datetime
+
+import tkinter.filedialog as filedialog 
 import tkinter as tk
 
 def load_instance(filename):
@@ -75,7 +77,7 @@ def plot_global_statistics(base_dir):
 
     while key != "":
         print("Select", key, "stats file")
-        file_path = tk.filedialog.askopenfilename()
+        file_path = filedialog.askopenfilename()
         with open (file_path, 'rb') as fp:
             global_times[key] = pickle.load(fp)
         key = input("Enter statistics type label (Empty string to end): ")
@@ -97,7 +99,7 @@ def plot_global_statistics(base_dir):
     plt.legend()
 
     now = datetime.datetime.now().strftime('%y-%m-%d_%H-%M')
-    plt.savefig(os.path.join(base_dir, "res", now + ".png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(base_dir, "res","stats", now + ".png"), dpi=300, bbox_inches='tight')
     plt.show()
 
 def plot_result_alternative(plate, circuits, plot_title):
@@ -144,7 +146,7 @@ def solve_and_write(solver, base_dir, solver_dir, inputs, average=False, stats=F
         execution_time = None
         if average:
             times = []
-            for _ in range(10):
+            for _ in range(5):
                 sol, execution_time = solver.solve(instance)
                 if sol is not None:
                     times.append(execution_time)
