@@ -60,6 +60,15 @@ constraint  forall(r in circuits)(
 %       ])
 %   minimize plate_height;
 
+% solve
+%   :: seq_search([
+%       int_search([y[r] | r in ordered_c], input_order, indomain_min,complete),
+%       int_search([x[r] | r in ordered_c], input_order, indomain_min,complete),
+%       int_search([plate_height], input_order, indomain_min, complete),
+%       ])
+%   minimize plate_height;
+
+
 % solve :: 
 %   int_search([y[r] | r in ordered_c] ++ [x[r] | r in ordered_c] ++ [plate_height], first_fail, indomain_min, complete)     
 %   minimize plate_height;

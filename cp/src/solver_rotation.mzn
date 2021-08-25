@@ -75,7 +75,7 @@ constraint symmetry_breaking_constraint(
 
 solve 
   :: seq_search([
-      int_search([plate_height], first_fail, indomain_min, complete),
+      int_search([plate_height], input_order, indomain_min, complete),
       bool_search(r,input_order, indomain_min,complete)
   ])
   minimize plate_height;

@@ -66,6 +66,5 @@ constraint symmetry_breaking_constraint(
 
 % === Search ===
 solve 
-  :: int_search([plate_height], first_fail, indomain_min, complete)
-  :: relax_and_reconstruct([plate_height], 70) 
+  :: int_search([plate_height], input_order, indomain_min, complete)
   minimize plate_height;
