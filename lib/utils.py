@@ -7,6 +7,7 @@ import matplotlib.colors as colors
 import numpy as np
 import datetime
 import tkinter as tk
+import tkinter.filedialog as filedialog
 
 def load_instance(filename):
     with open(filename, 'r') as sol:
@@ -75,19 +76,19 @@ def plot_global_statistics(base_dir):
 
     while key != "":
         print("Select", key, "stats file")
-        file_path = tk.filedialog.askopenfilename()
+        file_path = filedialog.askopenfilename()
         with open (file_path, 'rb') as fp:
             global_times[key] = pickle.load(fp)
         key = input("Enter statistics type label (Empty string to end): ")
 
     instances_num = min([len(val) for val in global_times.values()])
+    files_num = len(global_times)
     r = np.arange(0, instances_num)
-    bar_width = (1 / instances_num) * 0.75
+    bar_width = (1 / files_num) * 0.75
 
     plt.figure(figsize=(12.8, 7.2))
     for i, (key, stats_times) in enumerate(global_times.items()):
-        #TODO: Fix even number of columns
-        plt.bar(r + (bar_width / 2 * (2*i-(instances_num-1))), stats_times, bar_width, label=key)
+        plt.bar(r + (bar_width / 2 * (2*i-(files_num-1))), np.array(stats_times)[0:instances_num], bar_width, label=key)
     plt.xticks(r)
     plt.xlabel("Instance")
     plt.yscale('log')
