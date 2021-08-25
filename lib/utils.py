@@ -145,12 +145,16 @@ def solve_and_write(solver, base_dir, solver_dir, inputs, average=False, stats=F
         execution_time = None
         if average:
             times = []
-            for _ in range(10):
+            times_full = []
+            for _ in range(2):
                 sol, execution_time = solver.solve(instance)
                 if sol is not None:
                     times.append(execution_time)
+                    times_full.append(execution_time)
+                else:
+                    times_full.append(-1)
 
-            execution_time = sum(times) / len(times)
+            execution_time = sum(times) / len(times) if len(times) > 0 else None
         else:
             sol, execution_time = solver.solve(instance)
 
