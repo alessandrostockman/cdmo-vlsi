@@ -39,7 +39,9 @@ if __name__ == "__main__":
             if 'ins' in filename:
                 output = output.replace('ins', 'out')
             plate, circuits_pos = load_solution(output)
-            plot_result(plate, circuits_pos, filename)
+
+            if plate is not None and circuits_pos is not None:
+                plot_result(plate, circuits_pos, filename)
         exit()
     else:
         raise ArgumentError("Either choose a solver or ask for plots")

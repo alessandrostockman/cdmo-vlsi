@@ -20,13 +20,15 @@ def load_instance(filename):
         return width, circuits
 
 def load_solution(filename):
-    with open(filename, 'r') as sol:
-        plate = tuple(int(el) for el in sol.readline().strip().split(" "))
-        circuit_num = int(sol.readline().strip())
-        circuits = []
-        for i in range(circuit_num):
-            circuits.append(tuple(int(el) for el in sol.readline().strip().split(" ")))
-        return plate, circuits
+    if os.path.isfile(filename):
+        with open(filename, 'r') as sol:
+            plate = tuple(int(el) for el in sol.readline().strip().split(" "))
+            circuit_num = int(sol.readline().strip())
+            circuits = []
+            for i in range(circuit_num):
+                circuits.append(tuple(int(el) for el in sol.readline().strip().split(" ")))
+            return plate, circuits
+    return None, []
 
 
 def plot_result(plate, circuits, plot_title):
@@ -153,6 +155,7 @@ def solve_and_write(solver, base_dir, solver_dir, inputs, average=False, stats=F
                     times.append(execution_time)
                     times_complete.append(execution_time)
                 else:
+                    break
                     times_complete.append(-1)
 
             execution_time = sum(times) / len(times) if len(times) > 0 else None
