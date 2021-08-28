@@ -163,14 +163,15 @@ def parse_arguments(main=True):
     parser = ArgumentParser()
 
     if main:
-        parser.add_argument("-S", "--solver", default="null", help="", choices=["null", "cp", "sat", "smt"])
-        parser.add_argument('-I', '--instances', help="", default="res/instances")
-        parser.add_argument('-O', '--output', help="", default=None)
-        parser.add_argument('-B', '--bar', help="", default=False, action='store_true')
+        parser.add_argument("-S", "--solver", default="null", help="Select solver used for execution", choices=["null", "cp", "sat", "smt"])
+        parser.add_argument('-I', '--instances', help="Instances to be solved. Can be a directory, a file or `all`, which searches by default \
+            for the files from ins-0.txt to ins-40.txt in the path `res/instances`", default="res/instances")
+        parser.add_argument('-O', '--output', help="Output directory of the files containing the solutions", default=None)
+        parser.add_argument('-B', '--bar', help="Bar plot mode to obtain a summary of the statistics", default=False, action='store_true')
         
-    parser.add_argument('-P', '--plot', help="", default=False, action='store_true')
-    parser.add_argument('-X', '--stats', help="", default=True, action='store_false')
-    parser.add_argument('-A', '--average', help="", default=False, action='store_true')
-    parser.add_argument('-T', '--timeout', help="", default=300)
-    parser.add_argument('-R', '--rotation', help="", default=False, action='store_true')
+    parser.add_argument('-P', '--plot', help="Plots the solution after it has been computed", default=False, action='store_true')
+    parser.add_argument('-X', '--stats', help="Disables automatic display of a plot containing the times of execution for each instance", default=True, action='store_false')
+    parser.add_argument('-A', '--average', help="Solves each instance 5 times and computes an average of the tries", default=False, action='store_true')
+    parser.add_argument('-T', '--timeout', help="Timeout for the execution of the solvers in seconds", default=300)
+    parser.add_argument('-R', '--rotation', help="Enables rotation mode", default=False, action='store_true')
     return parser.parse_args()
