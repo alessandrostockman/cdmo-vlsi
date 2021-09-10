@@ -165,7 +165,7 @@ def parse_arguments(main=True):
     if main:
         parser.add_argument("-S", "--solver", default="null", help="Select solver used for execution", choices=["null", "cp", "sat", "smt"])
         parser.add_argument('-I', '--instances', help="Instances to be solved. Can be a directory, a file or `all`, which searches by default \
-            for the files from ins-0.txt to ins-40.txt in the path `res/instances`", default="res/instances")
+            for the files from ins-0.txt to ins-40.txt in the path `res/instances`", default="all")
         parser.add_argument('-O', '--output', help="Output directory of the files containing the solutions", default=None)
         parser.add_argument('-B', '--bar', help="Bar plot mode to obtain a summary of the statistics", default=False, action='store_true')
         
